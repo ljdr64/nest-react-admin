@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-primary: #c1292e;
+  --brand-background: #ffffff;
+  --brand-active: #c1292e;
+  --brand-header-background: #e2e1e1;
+  --primary-red: #c1292e;
+  --red-hover: #c1292e;
+  --primary-white: #ffffff;
+  --white-hover: #f2f2f2;
+
+  --font-primary: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-alt: "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --sidebar-bg: url("../assets/sidemenu-bg.jpg");
+  --urbano-logo-black: url("../assets/urbano-logo-black.png");
+  --urbano-logo-white: url("../assets/urbano-logo-white.png");
+  --urbano-logo: url("../assets/urbano-logo.png");
+}
+
 @layer base {
   html,
   body,
@@ -44,9 +63,31 @@
     @apply flex flex-col lg:flex-row gap-5 rounded-lg p-3 shadow overflow-x-auto border;
   }
   .sidebar {
-    @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 bg-white lg:translate-x-0 transition-transform;
+    background-image: var(--sidebar-bg);
+    @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 lg:translate-x-0 transition-transform;
   }
   .sidebar.show {
     @apply translate-x-0 !important;
+  }
+  .sidebar-title {
+    background-image: var(--urbano-logo-white);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    @apply flex justify-center items-center mb-6 w-full h-20;
+  }
+  .sidebar-item {
+    @apply flex rounded-md font-semibold p-4 transition-colors;
+    background-color: var(--brand-primary);
+  }
+  .sidebar-item:hover {
+    background-color: var(--red-hover);
+  }
+  .logout-button {
+    background-color: var(--brand-primary);
+    @apply text-white rounded-lg p-4 flex gap-3 font-semibold transition-colors;
+  }
+  .logout-button:hover {
+    background-color: var(--red-hover);
   }
 }

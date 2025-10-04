@@ -6,19 +6,21 @@ interface SidebarItemProps {
   children: ReactNode;
   to: string;
   active?: boolean;
+  className?: string; // 👈 añadimos esta línea
 }
 
 export default function SidebarItem({
   children,
   to,
   active = false,
+  className = '',
 }: SidebarItemProps) {
   return (
     <Link
       to={to}
-      className="no-underline text-black hover:bg-gray-300 rounded-md p-3 transition-colors"
+      className={`no-underline rounded-lg p-4 transition-colors flex gap-10 font-semibold text-white ${className}`}
     >
-      <span className="flex gap-5 font-semibold">
+      <span className="flex gap-5">
         {children} {active ? <ChevronRight /> : null}
       </span>
     </Link>
