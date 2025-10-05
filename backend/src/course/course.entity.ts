@@ -1,9 +1,11 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import { Content } from '../content/content.entity';
@@ -19,8 +21,11 @@ export class Course extends BaseEntity {
   @Column()
   description: string;
 
-  @Column()
+  @CreateDateColumn({ type: 'timestamp' })
   dateCreated: Date;
+
+  @UpdateDateColumn({ type: 'timestamp' })
+  dateUpdated: Date;
 
   @OneToMany(() => Content, (content) => content.course)
   contents: Content[];

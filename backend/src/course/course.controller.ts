@@ -41,8 +41,17 @@ export class CourseController {
   }
 
   @Get()
-  async findAll(@Query() courseQuery: CourseQuery): Promise<Course[]> {
-    return await this.courseService.findAll(courseQuery);
+  @Roles(Role.Admin)
+  async findAll(
+    @Query() userQuery: CourseQuery,
+  ): Promise<{
+    data: Course[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    return await this.courseService.findAll(userQuery);
   }
 
   @Get('/:id')
@@ -78,7 +87,13 @@ export class CourseController {
   async findAllContentsByCourseId(
     @Param('id') id: string,
     @Query() contentQuery: ContentQuery,
-  ): Promise<Content[]> {
+  ): Promise<{
+    data: Content[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     return await this.contentService.findAllByCourseId(id, contentQuery);
   }
 
@@ -94,10 +109,7 @@ export class CourseController {
 
   @Delete('/:id/contents/:contentId')
   @Roles(Role.Admin)
-  async deleteContent(
-    @Param('id') id: string,
-    @Param('contentId') contentId: string,
-  ): Promise<string> {
-    return await this.contentService.delete(id, contentId);
+  async deleteContent(@Param('contentId') contentId: string): Promise<string> {
+    return await this.contentService.delete(contentId);
   }
 }

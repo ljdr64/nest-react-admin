@@ -42,7 +42,15 @@ export class UserController {
 
   @Get()
   @Roles(Role.Admin)
-  async findAll(@Query() userQuery: UserQuery): Promise<User[]> {
+  async findAll(
+    @Query() userQuery: UserQuery,
+  ): Promise<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     return await this.userService.findAll(userQuery);
   }
 

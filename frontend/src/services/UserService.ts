@@ -9,30 +9,31 @@ class UserService {
     await apiService.post('/api/users', createUserRequest);
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    return (
-      await apiService.get<User[]>('/api/users', {
-        params: userQuery,
-      })
-    ).data;
+  async findAll(userQuery: UserQuery): Promise<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const response = await apiService.get('/api/users', {
+      params: userQuery,
+    });
+    return response.data;
   }
 
   async findOne(id: string): Promise<User> {
-    return (await apiService.get<User>(`/api/users/${id}`)).data;
+    const response = await apiService.get(`/api/users/${id}`);
+    return response.data;
   }
 
   async update(
     id: string,
-    updateUserRequest: UpdateUserRequest,
+    updateUserRequest: UpdateUserRequest
   ): Promise<void> {
-    const {
-      firstName,
-      isActive,
-      lastName,
-      password,
-      role,
-      username,
-    } = updateUserRequest;
+    const { firstName, lastName, username, role, isActive, password } =
+      updateUserRequest;
+
     await apiService.put(`/api/users/${id}`, {
       firstName: firstName || undefined,
       lastName: lastName || undefined,

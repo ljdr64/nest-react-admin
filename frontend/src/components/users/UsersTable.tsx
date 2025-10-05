@@ -10,16 +10,26 @@ import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
-interface UsersTableProps {
+interface UsersTableData {
   data: User[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface UsersTableProps {
+  data: UsersTableData | undefined;
   isLoading: boolean;
-  refetch: () => Promise<QueryObserverResult<User[], unknown>>;
+  refetch: () => Promise<QueryObserverResult<UsersTableData, unknown>>;
+  authenticatedUser: { id: string };
 }
 
 export default function UsersTable({
   data,
   isLoading,
   refetch,
+  authenticatedUser,
 }: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [updateShow, setUpdateShow] = useState<boolean>(false);
@@ -54,47 +64,47 @@ export default function UsersTable({
       await refetch();
       setUpdateShow(false);
       reset();
-      setError(null);
+      setError(undefined);
     } catch (error) {
       setError(error.response.data.message);
     }
   };
 
+  const users = data?.data || [];
+
   return (
     <>
       <div className="table-container">
         <Table columns={['Name', 'Username', 'Status', 'Role', 'Created']}>
-          {isLoading
-            ? null
-            : data.map(
-                ({ id, firstName, lastName, role, isActive, username }) => (
-                  <tr key={id}>
-                    <TableItem>{`${firstName} ${lastName}`}</TableItem>
-                    <TableItem>{username}</TableItem>
-                    <TableItem>
-                      {isActive ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          Inactive
-                        </span>
-                      )}
-                    </TableItem>
-                    <TableItem>{role}</TableItem>
+          {!isLoading &&
+            users.map(
+              ({ id, firstName, lastName, role, isActive, username }) => (
+                <tr key={id}>
+                  <TableItem>{`${firstName} ${lastName}`}</TableItem>
+                  <TableItem>{username}</TableItem>
+                  <TableItem>
+                    {isActive ? (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        Inactive
+                      </span>
+                    )}
+                  </TableItem>
+                  <TableItem>{role}</TableItem>
+                  {id !== authenticatedUser.id && (
                     <TableItem className="text-right">
                       <button
                         className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
                         onClick={() => {
                           setSelectedUserId(id);
-
                           setValue('firstName', firstName);
                           setValue('lastName', lastName);
                           setValue('username', username);
                           setValue('role', role);
                           setValue('isActive', isActive);
-
                           setUpdateShow(true);
                         }}
                       >
@@ -110,17 +120,26 @@ export default function UsersTable({
                         Delete
                       </button>
                     </TableItem>
-                  </tr>
-                )
-              )}
+                  )}
+                </tr>
+              )
+            )}
         </Table>
 
-        {!isLoading && data.length < 1 ? (
+        {!isLoading && users.length < 1 && (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
-        ) : null}
+        )}
       </div>
+
+      {data && (
+        <div className="text-sm text-gray-600 mt-2 text-right pr-2">
+          Showing {(data.page - 1) * data.limit + 1}–
+          {Math.min(data.page * data.limit, data.total)} of {data.total} users
+        </div>
+      )}
+
       {/* Delete User Modal */}
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
@@ -157,12 +176,13 @@ export default function UsersTable({
             )}
           </button>
         </div>
-        {error ? (
+        {error && (
           <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
             {error}
           </div>
-        ) : null}
+        )}
       </Modal>
+
       {/* Update User Modal */}
       <Modal show={updateShow}>
         <div className="flex">
@@ -171,7 +191,7 @@ export default function UsersTable({
             className="ml-auto focus:outline-none"
             onClick={() => {
               setUpdateShow(false);
-              setError(null);
+              setError(undefined);
               reset();
             }}
           >
@@ -179,7 +199,6 @@ export default function UsersTable({
           </button>
         </div>
         <hr />
-
         <form
           className="flex flex-col gap-5 mt-5"
           onSubmit={handleSubmit(handleUpdate)}
@@ -203,21 +222,15 @@ export default function UsersTable({
             type="text"
             className="input"
             placeholder="Username"
-            disabled={isSubmitting}
             {...register('username')}
           />
           <input
             type="password"
             className="input"
             placeholder="Password"
-            disabled={isSubmitting}
             {...register('password')}
           />
-          <select
-            className="input"
-            {...register('role')}
-            disabled={isSubmitting}
-          >
+          <select className="input" {...register('role')}>
             <option value="user">User</option>
             <option value="editor">Editor</option>
             <option value="admin">Admin</option>
@@ -237,11 +250,11 @@ export default function UsersTable({
               'Save'
             )}
           </button>
-          {error ? (
+          {error && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {error}
             </div>
-          ) : null}
+          )}
         </form>
       </Modal>
     </>

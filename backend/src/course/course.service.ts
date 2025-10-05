@@ -14,17 +14,61 @@ export class CourseService {
     }).save();
   }
 
-  async findAll(courseQuery: CourseQuery): Promise<Course[]> {
-    Object.keys(courseQuery).forEach((key) => {
-      courseQuery[key] = ILike(`%${courseQuery[key]}%`);
-    });
-    return await Course.find({
-      where: courseQuery,
-      order: {
-        name: 'ASC',
-        description: 'ASC',
-      },
-    });
+  async findAll(
+    userQuery: CourseQuery,
+  ): Promise<{
+    data: Course[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      name,
+      description,
+      page = 1,
+      limit = 10,
+      sortBy = 'id',
+      order = 'ASC',
+    } = userQuery;
+
+    const qb = Course.createQueryBuilder('course');
+
+    if (name) {
+      qb.andWhere('course.name ILIKE :name', {
+        name: `%${name}%`,
+      });
+    }
+
+    if (description) {
+      qb.andWhere('course.description ILIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    const validSortColumns = [
+      'id',
+      'name',
+      'description',
+      'dateCreated',
+      'dateUpdated',
+    ];
+
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'id';
+
+    qb.orderBy(`"course"."${sortColumn}"`, order === 'DESC' ? 'DESC' : 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findById(id: string): Promise<Course> {
@@ -44,8 +88,15 @@ export class CourseService {
   }
 
   async delete(id: string): Promise<string> {
-    const course = await this.findById(id);
-    await Course.delete(course);
+    const result = await Course.delete(id);
+
+    if (result.affected === 0) {
+      throw new HttpException(
+        `User with id ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     return id;
   }
 

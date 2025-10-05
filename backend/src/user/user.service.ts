@@ -23,20 +23,75 @@ export class UserService {
     return User.create(createUserDto).save();
   }
 
-  async findAll(userQuery: UserQuery): Promise<User[]> {
-    Object.keys(userQuery).forEach((key) => {
-      if (key !== 'role') {
-        userQuery[key] = ILike(`%${userQuery[key]}%`);
-      }
-    });
+  async findAll(
+    userQuery: UserQuery,
+  ): Promise<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      firstName,
+      lastName,
+      username,
+      role,
+      page = 1,
+      limit = 10,
+      sortBy = 'id',
+      order = 'ASC',
+    } = userQuery;
 
-    return User.find({
-      where: userQuery,
-      order: {
-        firstName: 'ASC',
-        lastName: 'ASC',
-      },
-    });
+    const qb = User.createQueryBuilder('user');
+
+    if (firstName) {
+      qb.andWhere('user.firstName ILIKE :firstName', {
+        firstName: `%${firstName}%`,
+      });
+    }
+
+    if (lastName) {
+      qb.andWhere('user.lastName ILIKE :lastName', {
+        lastName: `%${lastName}%`,
+      });
+    }
+
+    if (username) {
+      qb.andWhere('user.username ILIKE :username', {
+        username: `%${username}%`,
+      });
+    }
+
+    if (role) {
+      qb.andWhere('user.role = :role', { role });
+    }
+
+    const validSortColumns = [
+      'id',
+      'firstName',
+      'lastName',
+      'username',
+      'role',
+      'dateCreated',
+      'dateUpdated',
+    ];
+
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'id';
+
+    qb.orderBy(`"user"."${sortColumn}"`, order === 'DESC' ? 'DESC' : 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findById(id: string): Promise<User> {
@@ -81,7 +136,15 @@ export class UserService {
   }
 
   async delete(id: string): Promise<string> {
-    await User.delete(await this.findById(id));
+    const result = await User.delete(id);
+
+    if (result.affected === 0) {
+      throw new HttpException(
+        `User with id ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     return id;
   }
 

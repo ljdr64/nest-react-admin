@@ -12,17 +12,25 @@ import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
-interface UsersTableProps {
+interface CoursesTableData {
   data: Course[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface CoursesTableProps {
+  data: CoursesTableData | undefined;
   isLoading: boolean;
-  refetch: () => Promise<QueryObserverResult<Course[], unknown>>;
+  refetch: () => Promise<QueryObserverResult<CoursesTableData, unknown>>;
 }
 
 export default function CoursesTable({
   data,
   isLoading,
   refetch,
-}: UsersTableProps) {
+}: CoursesTableProps) {
   const { authenticatedUser } = useAuth();
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -63,58 +71,67 @@ export default function CoursesTable({
     }
   };
 
+  const courses = data?.data || [];
+
   return (
     <>
       <div className="table-container">
         <Table columns={['Name', 'Description', 'Created']}>
-          {isLoading
-            ? null
-            : data.map(({ id, name, description, dateCreated }) => (
-                <tr key={id}>
-                  <TableItem>
-                    <Link to={`/courses/${id}`}>{name}</Link>
-                  </TableItem>
-                  <TableItem>{description}</TableItem>
-                  <TableItem>
-                    {new Date(dateCreated).toLocaleDateString()}
-                  </TableItem>
-                  <TableItem className="text-right">
-                    {['admin', 'editor'].includes(authenticatedUser.role) ? (
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedCourseId(id);
+          {!isLoading &&
+            courses.map(({ id, name, description, dateCreated }) => (
+              <tr key={id}>
+                <TableItem>
+                  <Link to={`/courses/${id}`}>{name}</Link>
+                </TableItem>
+                <TableItem>{description}</TableItem>
+                <TableItem>
+                  {new Date(dateCreated).toLocaleDateString()}
+                </TableItem>
+                <TableItem className="text-right">
+                  {['admin', 'editor'].includes(authenticatedUser.role) ? (
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                      onClick={() => {
+                        setSelectedCourseId(id);
 
-                          setValue('name', name);
-                          setValue('description', description);
+                        setValue('name', name);
+                        setValue('description', description);
 
-                          setUpdateShow(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                    ) : null}
-                    {authenticatedUser.role === 'admin' ? (
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedCourseId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </TableItem>
-                </tr>
-              ))}
+                        setUpdateShow(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                  {authenticatedUser.role === 'admin' ? (
+                    <button
+                      className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
+                      onClick={() => {
+                        setSelectedCourseId(id);
+                        setDeleteShow(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+                </TableItem>
+              </tr>
+            ))}
         </Table>
-        {!isLoading && data.length < 1 ? (
+        {!isLoading && courses.length < 1 && (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
-        ) : null}
+        )}
       </div>
+
+      {data && (
+        <div className="text-sm text-gray-600 mt-2 text-right pr-2">
+          Showing {(data.page - 1) * data.limit + 1}–
+          {Math.min(data.page * data.limit, data.total)} of {data.total} courses
+        </div>
+      )}
+
       {/* Delete Course Modal */}
       <Modal show={deleteShow}>
         <AlertTriangle size={30} className="text-red-500 mr-5 fixed" />
@@ -151,12 +168,13 @@ export default function CoursesTable({
             )}
           </button>
         </div>
-        {error ? (
+        {error && (
           <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
             {error}
           </div>
-        ) : null}
+        )}
       </Modal>
+
       {/* Update Course Modal */}
       <Modal show={updateShow}>
         <div className="flex">
@@ -165,7 +183,7 @@ export default function CoursesTable({
             className="ml-auto focus:outline-none"
             onClick={() => {
               setUpdateShow(false);
-              setError(null);
+              setError(undefined);
               reset();
             }}
           >
@@ -200,11 +218,11 @@ export default function CoursesTable({
               'Save'
             )}
           </button>
-          {error ? (
+          {error && (
             <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
               {error}
             </div>
-          ) : null}
+          )}
         </form>
       </Modal>
     </>

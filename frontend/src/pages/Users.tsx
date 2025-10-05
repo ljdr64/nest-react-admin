@@ -21,17 +21,26 @@ export default function Users() {
   const [addUserShow, setAddUserShow] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState('id');
+  const [order, setOrder] = useState<'ASC' | 'DESC'>('ASC');
+
   const { data, isLoading, isFetching, refetch } = useQuery(
-    ['users', firstName, lastName, username, role],
+    ['users', firstName, lastName, username, role, page, limit, sortBy, order],
     async () => {
-      return (
-        await userService.findAll({
-          firstName: firstName || undefined,
-          lastName: lastName || undefined,
-          username: username || undefined,
-          role: role || undefined,
-        })
-      ).filter((user) => user.id !== authenticatedUser.id);
+      const response = await userService.findAll({
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        username: username || undefined,
+        role: role || undefined,
+        page,
+        limit,
+        sortBy,
+        order,
+      });
+
+      return response;
     },
     {
       refetchOnWindowFocus: false,
@@ -83,6 +92,47 @@ export default function Users() {
 
       <div className="table-filter mt-2">
         <div className="flex flex-row gap-5">
+          <select
+            className="input w-auto"
+            value={`${sortBy}-${order}`}
+            onChange={(e) => {
+              const [field, direction] = e.target.value.split('-');
+              setSortBy(field);
+              setOrder(direction);
+            }}
+          >
+            <optgroup label="Alphabetic">
+              <option value="firstName-ASC">First Name ↑</option>
+              <option value="firstName-DESC">First Name ↓</option>
+              <option value="lastName-ASC">Last Name ↑</option>
+              <option value="lastName-DESC">Last Name ↓</option>
+              <option value="username-ASC">Username ↑</option>
+              <option value="username-DESC">Username ↓</option>
+            </optgroup>
+            <optgroup label="Date created">
+              <option value="dateCreated-ASC">Oldest ↑</option>
+              <option value="dateCreated-DESC">Newest ↓</option>
+            </optgroup>
+          </select>
+
+          <select
+            className="input w-auto"
+            value={limit}
+            onChange={(e) => {
+              setPage(1);
+              setLimit(Number(e.target.value));
+            }}
+          >
+            <option value={5}>5 / page</option>
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="table-filter mt-2">
+        <div className="flex flex-row gap-5">
           <input
             type="text"
             className="input w-1/2"
@@ -121,7 +171,36 @@ export default function Users() {
         </div>
       </div>
 
-      <UsersTable data={data} isLoading={isLoading} refetch={refetch} />
+      <UsersTable
+        data={data}
+        isLoading={isLoading}
+        refetch={refetch}
+        authenticatedUser={authenticatedUser}
+      />
+
+      {data && data.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ←
+          </button>
+
+          <span className="text-gray-600 text-sm">
+            Page {data.page} of {data.totalPages}
+          </span>
+
+          <button
+            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+            disabled={page >= data.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            →
+          </button>
+        </div>
+      )}
 
       {/* Add User Modal */}
       <Modal show={addUserShow}>

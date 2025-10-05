@@ -17,14 +17,25 @@ export default function Courses() {
   const [addCourseShow, setAddCourseShow] = useState<boolean>(false);
   const [error, setError] = useState<string>();
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [sortBy, setSortBy] = useState('id');
+  const [order, setOrder] = useState<'ASC' | 'DESC'>('ASC');
+
   const { authenticatedUser } = useAuth();
   const { data, isLoading, isFetching, refetch } = useQuery(
-    ['courses', name, description],
-    () =>
-      courseService.findAll({
+    ['courses', name, description, page, limit, sortBy, order],
+    async () => {
+      const response = await courseService.findAll({
         name: name || undefined,
         description: description || undefined,
-      }),
+        page,
+        limit,
+        sortBy,
+        order,
+      });
+      return response;
+    },
     {
       refetchOnWindowFocus: false,
       refetchInterval: false,
@@ -75,6 +86,43 @@ export default function Courses() {
         </div>
       ) : null}
 
+      <div className="table-filter mt-2">
+        <div className="flex flex-row gap-5">
+          <select
+            className="input w-auto"
+            value={`${sortBy}-${order}`}
+            onChange={(e) => {
+              const [field, direction] = e.target.value.split('-');
+              setSortBy(field);
+              setOrder(direction);
+            }}
+          >
+            <optgroup label="Alphabetic">
+              <option value="name-ASC">Name ↑</option>
+              <option value="name-DESC">Name ↓</option>
+            </optgroup>
+            <optgroup label="Date created">
+              <option value="dateCreated-ASC">Oldest ↑</option>
+              <option value="dateCreated-DESC">Newest ↓</option>
+            </optgroup>
+          </select>
+
+          <select
+            className="input w-auto"
+            value={limit}
+            onChange={(e) => {
+              setPage(1);
+              setLimit(Number(e.target.value));
+            }}
+          >
+            <option value={5}>5 / page</option>
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+        </div>
+      </div>
+
       <div className="table-filter">
         <div className="flex flex-row gap-5">
           <input
@@ -95,6 +143,30 @@ export default function Courses() {
       </div>
 
       <CoursesTable data={data} isLoading={isLoading} refetch={refetch} />
+
+      {data && data.totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ←
+          </button>
+
+          <span className="text-gray-600 text-sm">
+            Page {data.page} of {data.totalPages}
+          </span>
+
+          <button
+            className="px-3 py-1 border rounded-md bg-white hover:bg-gray-100 disabled:opacity-50"
+            disabled={page >= data.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            →
+          </button>
+        </div>
+      )}
 
       {/* Add User Modal */}
       <Modal show={addCourseShow}>

@@ -11,17 +11,25 @@ import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
 
-interface ContentsTableProps {
+interface ContentsTableData {
   data: Content[];
-  courseId: string;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface ContentsTableProps {
+  data: ContentsTableData;
+  contentId: string;
   isLoading: boolean;
-  refetch: () => Promise<QueryObserverResult<Content[], unknown>>;
+  refetch: () => Promise<QueryObserverResult<ContentsTableData, unknown>>;
 }
 
 export default function ContentsTable({
   data,
   isLoading,
-  courseId,
+  contentId,
   refetch,
 }: ContentsTableProps) {
   const { authenticatedUser } = useAuth();
@@ -42,7 +50,7 @@ export default function ContentsTable({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await contentService.delete(courseId, selectedContentId);
+      await contentService.delete(contentId, selectedContentId);
       await refetch();
       setDeleteShow(false);
     } catch (error) {
@@ -55,7 +63,7 @@ export default function ContentsTable({
   const handleUpdate = async (updateContentRequest: UpdateContentRequest) => {
     try {
       await contentService.update(
-        courseId,
+        contentId,
         selectedContentId,
         updateContentRequest
       );
@@ -68,56 +76,65 @@ export default function ContentsTable({
     }
   };
 
+  const contents = data?.data || [];
+
   return (
     <>
       <div className="table-container">
         <Table columns={['Name', 'Description', 'Created']}>
-          {isLoading
-            ? null
-            : data.map(({ id, name, description, dateCreated }) => (
-                <tr key={id}>
-                  <TableItem>{name}</TableItem>
-                  <TableItem>{description}</TableItem>
-                  <TableItem>
-                    {new Date(dateCreated).toLocaleDateString()}
-                  </TableItem>
-                  <TableItem className="text-right">
-                    {['admin', 'editor'].includes(authenticatedUser.role) ? (
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
-                        onClick={() => {
-                          setSelectedContentId(id);
+          {!isLoading &&
+            contents.map(({ id, name, description, dateCreated }) => (
+              <tr key={id}>
+                <TableItem>{name}</TableItem>
+                <TableItem>{description}</TableItem>
+                <TableItem>
+                  {new Date(dateCreated).toLocaleDateString()}
+                </TableItem>
+                <TableItem className="text-right">
+                  {['admin', 'editor'].includes(authenticatedUser.role) ? (
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900 focus:outline-none"
+                      onClick={() => {
+                        setSelectedContentId(id);
 
-                          setValue('name', name);
-                          setValue('description', description);
+                        setValue('name', name);
+                        setValue('description', description);
 
-                          setUpdateShow(true);
-                        }}
-                      >
-                        Edit
-                      </button>
-                    ) : null}
-                    {authenticatedUser.role === 'admin' ? (
-                      <button
-                        className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
-                        onClick={() => {
-                          setSelectedContentId(id);
-                          setDeleteShow(true);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    ) : null}
-                  </TableItem>
-                </tr>
-              ))}
+                        setUpdateShow(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                  {authenticatedUser.role === 'admin' ? (
+                    <button
+                      className="text-red-600 hover:text-red-900 ml-3 focus:outline-none"
+                      onClick={() => {
+                        setSelectedContentId(id);
+                        setDeleteShow(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+                </TableItem>
+              </tr>
+            ))}
         </Table>
-        {!isLoading && data.length < 1 ? (
+        {!isLoading && contents.length < 1 && (
           <div className="text-center my-5 text-gray-500">
             <h1>Empty</h1>
           </div>
-        ) : null}
+        )}
       </div>
+
+      {data && (
+        <div className="text-sm text-gray-600 mt-2 text-right pr-2">
+          Showing {(data.page - 1) * data.limit + 1}–
+          {Math.min(data.page * data.limit, data.total)} of {data.total}{' '}
+          contents
+        </div>
+      )}
 
       {/* Delete Content Modal */}
       <Modal show={deleteShow}>
@@ -155,15 +172,15 @@ export default function ContentsTable({
             )}
           </button>
         </div>
-        {error ? (
+        {error && (
           <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
             {error}
           </div>
-        ) : null}
+        )}
       </Modal>
 
       {/* Update Content Modal */}
-      {selectedContentId ? (
+      {selectedContentId && (
         <Modal show={updateShow}>
           <div className="flex">
             <h1 className="font-semibold mb-3">Update Content</h1>
@@ -171,7 +188,7 @@ export default function ContentsTable({
               className="ml-auto focus:outline-none"
               onClick={() => {
                 setUpdateShow(false);
-                setError(null);
+                setError(undefined);
                 reset();
               }}
             >
@@ -206,14 +223,14 @@ export default function ContentsTable({
                 'Save'
               )}
             </button>
-            {error ? (
+            {error && (
               <div className="text-red-500 p-3 font-semibold border rounded-md bg-red-50">
                 {error}
               </div>
-            ) : null}
+            )}
           </form>
         </Modal>
-      ) : null}
+      )}
     </>
   );
 }

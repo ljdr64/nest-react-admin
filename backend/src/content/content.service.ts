@@ -65,17 +65,58 @@ export class ContentService {
   async findAllByCourseId(
     courseId: string,
     contentQuery: ContentQuery,
-  ): Promise<Content[]> {
-    Object.keys(contentQuery).forEach((key) => {
-      contentQuery[key] = ILike(`%${contentQuery[key]}%`);
-    });
-    return await Content.find({
-      where: { courseId, ...contentQuery },
-      order: {
-        name: 'ASC',
-        description: 'ASC',
-      },
-    });
+  ): Promise<{
+    data: Content[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      name,
+      description,
+      page = 1,
+      limit = 10,
+      sortBy = 'id',
+      order = 'ASC',
+    } = contentQuery;
+
+    const qb = Content.createQueryBuilder(
+      'content',
+    ).where('content.courseId = :courseId', { courseId });
+
+    if (name) {
+      qb.andWhere('content.name ILIKE :name', { name: `%${name}%` });
+    }
+
+    if (description) {
+      qb.andWhere('content.description ILIKE :description', {
+        description: `%${description}%`,
+      });
+    }
+
+    const validSortColumns = [
+      'id',
+      'name',
+      'description',
+      'dateCreated',
+      'dateUpdated',
+    ];
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'id';
+
+    qb.orderBy(`"content"."${sortColumn}"`, order === 'DESC' ? 'DESC' : 'ASC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async update(
@@ -87,9 +128,16 @@ export class ContentService {
     return await Content.create({ id: content.id, ...updateContentDto }).save();
   }
 
-  async delete(courseId: string, id: string): Promise<string> {
-    const content = await this.findByCourseIdAndId(courseId, id);
-    await Content.delete(content);
+  async delete(id: string): Promise<string> {
+    const result = await Content.delete(id);
+
+    if (result.affected === 0) {
+      throw new HttpException(
+        `User with id ${id} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     return id;
   }
 

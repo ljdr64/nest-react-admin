@@ -1,10 +1,12 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import { Course } from '../course/course.entity';
@@ -20,10 +22,13 @@ export class Content extends BaseEntity {
   @Column()
   description: string;
 
-  @Column()
+  @CreateDateColumn({ type: 'timestamp' })
   dateCreated: Date;
 
-  @Column({ select: false, nullable: false })
+  @UpdateDateColumn({ type: 'timestamp' })
+  dateUpdated: Date;
+
+  @Column({ nullable: false })
   courseId: string;
 
   @ManyToOne(() => Course, (course) => course.contents, { onDelete: 'CASCADE' })
