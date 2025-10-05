@@ -43,9 +43,13 @@
 
 @layer components {
   .btn {
-    @apply p-3 bg-blue-500 rounded-md focus:outline-none text-white;
-    @apply hover:bg-blue-700 transition-all;
+    background-color: var(--brand-primary);
+    @apply p-3 rounded-md focus:outline-none text-white;
+    @apply transition-all;
     @apply focus:ring disabled:opacity-50;
+  }
+  .btn:hover {
+    background-color: var(--red-hover);
   }
   .btn.danger {
     @apply bg-red-500 hover:bg-red-700;
@@ -62,6 +66,10 @@
   .table-filter {
     @apply flex flex-col lg:flex-row gap-5 rounded-lg p-3 shadow overflow-x-auto border;
   }
+  .layout-header {
+    background-color: var(--brand-header-background);
+    font-family: var(--font-primary);
+  }
   .sidebar {
     background-image: var(--sidebar-bg);
     @apply fixed h-full w-72 p-5 shadow flex flex-col transform -translate-x-72 lg:translate-x-0 transition-transform;
@@ -77,8 +85,8 @@
     @apply flex justify-center items-center mb-6 w-full h-20;
   }
   .sidebar-item {
-    @apply flex rounded-md font-semibold p-4 transition-colors;
     background-color: var(--brand-primary);
+    @apply flex rounded-md font-semibold p-4 transition-colors;
   }
   .sidebar-item:hover {
     background-color: var(--red-hover);
