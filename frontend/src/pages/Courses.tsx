@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader, Plus, X } from 'react-feather';
+import { Loader, Plus, RefreshCcw, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 
@@ -18,7 +18,7 @@ export default function Courses() {
   const [error, setError] = useState<string>();
 
   const { authenticatedUser } = useAuth();
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isFetching, refetch } = useQuery(
     ['courses', name, description],
     () =>
       courseService.findAll({
@@ -26,8 +26,9 @@ export default function Courses() {
         description: description || undefined,
       }),
     {
-      refetchInterval: 1000,
-    },
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+    }
   );
 
   const {
@@ -40,6 +41,7 @@ export default function Courses() {
   const saveCourse = async (createCourseRequest: CreateCourseRequest) => {
     try {
       await courseService.save(createCourseRequest);
+      await refetch();
       setAddCourseShow(false);
       reset();
       setError(null);
@@ -53,12 +55,24 @@ export default function Courses() {
       <h1 className="font-semibold text-3xl mb-5">Manage Courses</h1>
       <hr />
       {authenticatedUser.role !== 'user' ? (
-        <button
-          className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
-          onClick={() => setAddCourseShow(true)}
-        >
-          <Plus /> Add Course
-        </button>
+        <div className="flex justify-start items-center my-4 gap-2">
+          <button
+            className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
+            onClick={() => setAddCourseShow(true)}
+          >
+            <Plus /> Add Course
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="btn flex w-auto gap-2 items-center justify-center"
+          >
+            {isFetching && !isLoading ? (
+              <Loader size={24} className="animate-spin" />
+            ) : (
+              <RefreshCcw size={24} />
+            )}
+          </button>
+        </div>
       ) : null}
 
       <div className="table-filter">
@@ -80,7 +94,7 @@ export default function Courses() {
         </div>
       </div>
 
-      <CoursesTable data={data} isLoading={isLoading} />
+      <CoursesTable data={data} isLoading={isLoading} refetch={refetch} />
 
       {/* Add User Modal */}
       <Modal show={addCourseShow}>

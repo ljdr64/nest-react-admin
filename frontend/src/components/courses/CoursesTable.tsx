@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { QueryObserverResult } from 'react-query';
 
 import useAuth from '../../hooks/useAuth';
 import Course from '../../models/course/Course';
@@ -14,9 +15,14 @@ import TableItem from '../shared/TableItem';
 interface UsersTableProps {
   data: Course[];
   isLoading: boolean;
+  refetch: () => Promise<QueryObserverResult<Course[], unknown>>;
 }
 
-export default function CoursesTable({ data, isLoading }: UsersTableProps) {
+export default function CoursesTable({
+  data,
+  isLoading,
+  refetch,
+}: UsersTableProps) {
   const { authenticatedUser } = useAuth();
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -36,6 +42,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
     try {
       setIsDeleting(true);
       await courseService.delete(selectedCourseId);
+      await refetch();
       setDeleteShow(false);
     } catch (error) {
       setError(error.response.data.message);
@@ -47,6 +54,7 @@ export default function CoursesTable({ data, isLoading }: UsersTableProps) {
   const handleUpdate = async (updateCourseRequest: UpdateCourseRequest) => {
     try {
       await courseService.update(selectedCourseId, updateCourseRequest);
+      await refetch();
       setUpdateShow(false);
       reset();
       setError(null);

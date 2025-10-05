@@ -13,7 +13,7 @@ export default function Dashboard() {
       <hr />
       <div className="mt-5 flex flex-col gap-5">
         {!isLoading ? (
-          <div className="flex flex-col sm:flex-row gap-5">
+          <div className="flex flex-col sm:flex-row gap-5 my-4">
             <div className="card shadow text-white bg-blue-500 flex-1">
               <h1 className="font-semibold sm:text-4xl text-center mb-3">
                 {data.numberOfUsers}

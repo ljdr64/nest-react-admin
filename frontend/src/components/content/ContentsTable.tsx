@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { QueryObserverResult } from 'react-query';
 
 import useAuth from '../../hooks/useAuth';
 import Content from '../../models/content/Content';
@@ -14,12 +15,14 @@ interface ContentsTableProps {
   data: Content[];
   courseId: string;
   isLoading: boolean;
+  refetch: () => Promise<QueryObserverResult<Content[], unknown>>;
 }
 
 export default function ContentsTable({
   data,
   isLoading,
   courseId,
+  refetch,
 }: ContentsTableProps) {
   const { authenticatedUser } = useAuth();
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
@@ -40,6 +43,7 @@ export default function ContentsTable({
     try {
       setIsDeleting(true);
       await contentService.delete(courseId, selectedContentId);
+      await refetch();
       setDeleteShow(false);
     } catch (error) {
       setError(error.response.data.message);
@@ -53,8 +57,9 @@ export default function ContentsTable({
       await contentService.update(
         courseId,
         selectedContentId,
-        updateContentRequest,
+        updateContentRequest
       );
+      await refetch();
       setUpdateShow(false);
       reset();
       setError(null);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader, Plus, X } from 'react-feather';
+import { Loader, Plus, RefreshCcw, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { useQuery } from 'react-query';
 import { useParams } from 'react-router';
@@ -30,7 +30,7 @@ export default function Course() {
     reset,
   } = useForm<CreateContentRequest>();
 
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, isFetching, refetch } = useQuery(
     [`contents-${id}`, name, description],
     async () =>
       contentService.findAll(id, {
@@ -38,13 +38,15 @@ export default function Course() {
         description: description || undefined,
       }),
     {
-      refetchInterval: 1000,
-    },
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+    }
   );
 
   const saveCourse = async (createContentRequest: CreateContentRequest) => {
     try {
       await contentService.save(id, createContentRequest);
+      await refetch();
       setAddContentShow(false);
       reset();
       setError(null);
@@ -55,17 +57,29 @@ export default function Course() {
 
   return (
     <Layout>
-      <h1 className="font-semibold text-3xl mb-5">
-        {!userQuery.isLoading ? `${userQuery.data.name} Contents` : ''}
+      <h1 className="font-semibold text-3xl mb-5 min-h-[2rem]">
+        {userQuery.isLoading ? 'Loading...' : `${userQuery.data.name} Contents`}
       </h1>
       <hr />
       {authenticatedUser.role !== 'user' ? (
-        <button
-          className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
-          onClick={() => setAddContentShow(true)}
-        >
-          <Plus /> Add Content
-        </button>
+        <div className="flex justify-start items-center my-4 gap-2">
+          <button
+            className="btn my-5 flex gap-2 w-full sm:w-auto justify-center"
+            onClick={() => setAddContentShow(true)}
+          >
+            <Plus /> Add Content
+          </button>
+          <button
+            onClick={() => refetch()}
+            className="btn flex w-auto gap-2 items-center justify-center"
+          >
+            {isFetching && !isLoading ? (
+              <Loader size={24} className="animate-spin" />
+            ) : (
+              <RefreshCcw size={24} />
+            )}
+          </button>
+        </div>
       ) : null}
 
       <div className="table-filter">
@@ -87,7 +101,12 @@ export default function Course() {
         </div>
       </div>
 
-      <ContentsTable data={data} isLoading={isLoading} courseId={id} />
+      <ContentsTable
+        data={data}
+        isLoading={isLoading}
+        courseId={id}
+        refetch={refetch}
+      />
 
       {/* Add User Modal */}
       <Modal show={addContentShow}>

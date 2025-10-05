@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertTriangle, Loader, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
+import { QueryObserverResult } from 'react-query';
 
 import UpdateUserRequest from '../../models/user/UpdateUserRequest';
 import User from '../../models/user/User';
@@ -12,9 +13,14 @@ import TableItem from '../shared/TableItem';
 interface UsersTableProps {
   data: User[];
   isLoading: boolean;
+  refetch: () => Promise<QueryObserverResult<User[], unknown>>;
 }
 
-export default function UsersTable({ data, isLoading }: UsersTableProps) {
+export default function UsersTable({
+  data,
+  isLoading,
+  refetch,
+}: UsersTableProps) {
   const [deleteShow, setDeleteShow] = useState<boolean>(false);
   const [updateShow, setUpdateShow] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -33,6 +39,7 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
     try {
       setIsDeleting(true);
       await userService.delete(selectedUserId);
+      await refetch();
       setDeleteShow(false);
     } catch (error) {
       setError(error.response.data.message);
@@ -44,6 +51,7 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
   const handleUpdate = async (updateUserRequest: UpdateUserRequest) => {
     try {
       await userService.update(selectedUserId, updateUserRequest);
+      await refetch();
       setUpdateShow(false);
       reset();
       setError(null);
@@ -103,7 +111,7 @@ export default function UsersTable({ data, isLoading }: UsersTableProps) {
                       </button>
                     </TableItem>
                   </tr>
-                ),
+                )
               )}
         </Table>
 
