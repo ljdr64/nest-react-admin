@@ -27,6 +27,11 @@ class UserService {
     return response.data;
   }
 
+  async getProfile(): Promise<User> {
+    const response = await apiService.get('/api/users/profile');
+    return response.data;
+  }
+
   async update(
     id: string,
     updateUserRequest: UpdateUserRequest

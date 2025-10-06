@@ -43,4 +43,7 @@ export class User extends BaseEntity {
 
   @UpdateDateColumn({ type: 'timestamp' })
   dateUpdated: Date;
+
+  @Column({ type: 'jsonb', default: [] })
+  votes: { courseId: string; rating: number }[];
 }

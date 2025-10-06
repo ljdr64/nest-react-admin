@@ -34,6 +34,13 @@ class CourseService {
     await apiService.put(`/api/courses/${id}`, updateCourseRequest);
   }
 
+  async getTopRated() {
+    const res = await apiService.get(
+      '/api/courses?sortBy=rating&order=DESC&limit=5'
+    );
+    return res.data.data;
+  }
+
   async delete(id: string): Promise<void> {
     await apiService.delete(`/api/courses/${id}`);
   }

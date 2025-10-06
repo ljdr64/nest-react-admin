@@ -82,6 +82,17 @@ export class CourseService {
     return course;
   }
 
+  async rateCourse(id: string, rating: number): Promise<Course> {
+    const course = await this.findById(id);
+
+    const total = course.rating * course.votesCount + rating;
+    course.votesCount += 1;
+    course.rating = total / course.votesCount;
+
+    await course.save();
+    return course;
+  }
+
   async update(id: string, updateCourseDto: UpdateCourseDto): Promise<Course> {
     const course = await this.findById(id);
     return await Course.create({ id: course.id, ...updateCourseDto }).save();

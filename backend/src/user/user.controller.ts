@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -52,6 +53,24 @@ export class UserController {
     totalPages: number;
   }> {
     return await this.userService.findAll(userQuery);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('profile')
+  async getProfile(@Req() req): Promise<User> {
+    const userId = req.user.userId;
+    return this.userService.findById(userId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('rate')
+  async rateCourseForUser(
+    @Body() body: { courseId: string; rating: number },
+    @Req() req: any,
+  ) {
+    const userId = req.user.userId;
+    const { courseId, rating } = body;
+    return this.userService.rateCourseForUser(userId, courseId, rating);
   }
 
   @Get('/:id')

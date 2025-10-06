@@ -21,31 +21,31 @@ export default function Sidebar({ className }: SidebarProps) {
     history.push('/login');
   };
 
- return (
+  return (
     <div className={`sidebar ${className} text-white`}>
-    <Link to="/" className="sidebar-title">
-      <h1 className="sr-only">Carna Project</h1>
-    </Link>
+      <Link to="/" className="sidebar-title">
+        <h1 className="sr-only">Carna Project</h1>
+      </Link>
 
-<nav className="mt-20 flex flex-col gap-10 flex-grow">
-  <SidebarItem to="/" className="sidebar-item">
-    <Home /> Dashboard
-  </SidebarItem>
+      <nav className="mt-20 flex flex-col gap-10 flex-grow">
+        <SidebarItem to="/" className="sidebar-item">
+          <Home /> Dashboard
+        </SidebarItem>
 
-  <SidebarItem to="/courses" className="sidebar-item">
-    <BookOpen /> Courses
-  </SidebarItem>
+        <SidebarItem to="/courses" className="sidebar-item">
+          <BookOpen /> Courses
+        </SidebarItem>
 
-  {authenticatedUser.role === 'admin' && (
-    <SidebarItem to="/users" className="sidebar-item">
-      <Users /> Users
-    </SidebarItem>
-  )}
-</nav>
+        {authenticatedUser.role === 'admin' && (
+          <SidebarItem to="/users" className="sidebar-item">
+            <Users /> Users
+          </SidebarItem>
+        )}
+      </nav>
 
-<button className="logout-button" onClick={handleLogout}>
-  <LogOut /> Logout
-</button>
+      <button className="logout-button" onClick={handleLogout}>
+        <LogOut /> Logout
+      </button>
     </div>
   );
 }

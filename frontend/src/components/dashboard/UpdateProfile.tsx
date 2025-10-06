@@ -13,7 +13,7 @@ export default function UpdateProfile() {
 
   const { data, isLoading, refetch } = useQuery(
     `user-${authenticatedUser.id}`,
-    () => userService.findOne(authenticatedUser.id),
+    () => userService.findOne(authenticatedUser.id)
   );
 
   const {
@@ -41,7 +41,7 @@ export default function UpdateProfile() {
     return (
       <div className="card shadow">
         <form
-          className="flex mt-3 flex-col gap-3 justify-center md:w-1/2 lg:w-1/3 mx-auto items-center"
+          className="flex mt-3 mb-3 flex-col gap-3 justify-center md:w-1/2 lg:w-1/3 mx-auto items-center"
           onSubmit={handleSubmit(handleUpdateUser)}
         >
           <h1 className="font-semibold text-4xl mb-10">{`Welcome ${data.firstName}`}</h1>

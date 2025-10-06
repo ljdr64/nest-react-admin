@@ -111,6 +111,25 @@ export class UserService {
     return User.findOne({ where: { username } });
   }
 
+  async rateCourseForUser(
+    userId: string,
+    courseId: string,
+    rating: number,
+  ): Promise<User> {
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+
+    if (!Array.isArray(user.votes)) {
+      user.votes = [];
+    }
+
+    user.votes.push({ courseId, rating });
+
+    await user.save();
+
+    return user;
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const currentUser = await this.findById(id);
 
@@ -154,9 +173,11 @@ export class UserService {
 
   /* Hash the refresh token and save it to the database */
   async setRefreshToken(id: string, refreshToken: string): Promise<void> {
-    const user = await this.findById(id);
-    await User.update(user, {
-      refreshToken: refreshToken ? await bcrypt.hash(refreshToken, 10) : null,
-    });
+    await User.update(
+      { id },
+      {
+        refreshToken: refreshToken ? await bcrypt.hash(refreshToken, 10) : null,
+      },
+    );
   }
 }

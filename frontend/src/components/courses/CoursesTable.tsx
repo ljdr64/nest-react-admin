@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { AlertTriangle, Loader, X } from 'react-feather';
+import { AlertTriangle, Loader, Star, X } from 'react-feather';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import { QueryObserverResult } from 'react-query';
+import { QueryObserverResult, useQuery } from 'react-query';
+
+import ApiService from '../../services/ApiService';
+import UserService from '../../services/UserService';
 
 import useAuth from '../../hooks/useAuth';
 import Course from '../../models/course/Course';
 import UpdateCourseRequest from '../../models/course/UpdateCourseRequest';
-import courseService from '../../services/CourseService';
+import CourseService from '../../services/CourseService';
 import Modal from '../shared/Modal';
 import Table from '../shared/Table';
 import TableItem from '../shared/TableItem';
@@ -37,6 +40,9 @@ export default function CoursesTable({
   const [selectedCourseId, setSelectedCourseId] = useState<string>();
   const [error, setError] = useState<string>();
   const [updateShow, setUpdateShow] = useState<boolean>(false);
+  const [hover, setHover] = useState({});
+  const [rated, setRated] = useState({});
+  const { data: user } = useQuery('currentUser', UserService.getProfile);
 
   const {
     register,
@@ -49,7 +55,7 @@ export default function CoursesTable({
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      await courseService.delete(selectedCourseId);
+      await CourseService.delete(selectedCourseId);
       await refetch();
       setDeleteShow(false);
     } catch (error) {
@@ -61,7 +67,7 @@ export default function CoursesTable({
 
   const handleUpdate = async (updateCourseRequest: UpdateCourseRequest) => {
     try {
-      await courseService.update(selectedCourseId, updateCourseRequest);
+      await CourseService.update(selectedCourseId, updateCourseRequest);
       await refetch();
       setUpdateShow(false);
       reset();
@@ -76,9 +82,11 @@ export default function CoursesTable({
   return (
     <>
       <div className="table-container">
-        <Table columns={['Name', 'Description', 'Created']}>
+        <Table
+          columns={['Name', 'Description', 'Created', 'Rating', 'Actions']}
+        >
           {!isLoading &&
-            courses.map(({ id, name, description, dateCreated }) => (
+            courses.map(({ id, name, description, dateCreated, rating }) => (
               <tr key={id}>
                 <TableItem>
                   <Link to={`/courses/${id}`}>{name}</Link>
@@ -87,6 +95,59 @@ export default function CoursesTable({
                 <TableItem>
                   {new Date(dateCreated).toLocaleDateString()}
                 </TableItem>
+                <TableItem>
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((value) => {
+                      const userVote = user?.votes?.find(
+                        (v) => v.courseId === id
+                      );
+                      const userRating = userVote?.rating ?? 0;
+
+                      const alreadyRated = userRating > 0 || rated[id]; // 👈 bloqueo total si ya votó
+
+                      return (
+                        <Star
+                          key={value}
+                          size={18}
+                          color={
+                            value <= (hover[id] || userRating || rating)
+                              ? '#ffc107'
+                              : '#e4e5e9'
+                          }
+                          onMouseEnter={() => {
+                            if (!alreadyRated)
+                              setHover((prev) => ({ ...prev, [id]: value }));
+                          }}
+                          onMouseLeave={() => {
+                            if (!alreadyRated)
+                              setHover((prev) => ({ ...prev, [id]: 0 }));
+                          }}
+                          onClick={async () => {
+                            if (alreadyRated) return; // 👈 evita cualquier click si ya votó
+
+                            try {
+                              await ApiService.post(`/api/courses/${id}/rate`, {
+                                rating: value,
+                              });
+                              await ApiService.post('/api/users/rate', {
+                                courseId: id,
+                                rating: value,
+                              });
+                              await refetch();
+                              setRated((prev) => ({ ...prev, [id]: true }));
+                            } catch (error) {
+                              console.error('Error rating course:', error);
+                            }
+                          }}
+                          className={`cursor-pointer transition-colors ${
+                            alreadyRated ? 'pointer-events-none opacity-70' : ''
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </TableItem>
+
                 <TableItem className="text-right">
                   {['admin', 'editor'].includes(authenticatedUser.role) ? (
                     <button

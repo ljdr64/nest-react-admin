@@ -6,4 +6,5 @@ export default interface User {
   role: string;
   isActive: boolean;
   dateCreated: string;
+  votes: { courseId: string; rating: number }[];
 }
