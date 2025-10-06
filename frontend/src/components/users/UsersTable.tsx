@@ -78,7 +78,15 @@ export default function UsersTable({
         <Table columns={['Name', 'Username', 'Status', 'Role', 'Created']}>
           {!isLoading &&
             users.map(
-              ({ id, firstName, lastName, role, isActive, username }) => (
+              ({
+                id,
+                firstName,
+                lastName,
+                role,
+                isActive,
+                username,
+                dateCreated,
+              }) => (
                 <tr key={id}>
                   <TableItem>{`${firstName} ${lastName}`}</TableItem>
                   <TableItem>{username}</TableItem>
@@ -94,6 +102,10 @@ export default function UsersTable({
                     )}
                   </TableItem>
                   <TableItem>{role}</TableItem>
+                  <TableItem>
+                    {new Date(dateCreated).toLocaleDateString()}
+                  </TableItem>
+
                   {id !== authenticatedUser.id && (
                     <TableItem className="text-right">
                       <button
