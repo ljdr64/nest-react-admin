@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
-COPY .env .env
+COPY .env.production .env.production
 COPY . .
 
 ENV NODE_OPTIONS=--openssl-legacy-provider
@@ -22,8 +22,8 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
 COPY package.json yarn.lock ./
-COPY ormconfig.js ./    
-COPY .env .env           
+COPY ormconfig.js ./
+COPY .env.production .env.production
 COPY --from=build /app/dist ./dist
 
 RUN yarn install --production --frozen-lockfile

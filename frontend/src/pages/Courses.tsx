@@ -123,7 +123,7 @@ export default function Courses() {
         </div>
       </div>
 
-      <div className="table-filter">
+      <div className="table-filter mt-2">
         <div className="flex flex-row gap-5">
           <input
             type="text"

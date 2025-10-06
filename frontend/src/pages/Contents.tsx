@@ -38,12 +38,12 @@ export default function Course() {
   } = useForm<CreateContentRequest>();
 
   const { data, isLoading, isFetching, refetch } = useQuery(
-    ['contents', id, name, description, page, limit, sortBy, order], // 👈 incluye id
+    ['contents', id, name, description, page, limit, sortBy, order],
     async () => {
       const response = await ContentService.findAll({
         name: name || undefined,
         description: description || undefined,
-        courseId: id, // 👈 importante: filtra los contenidos de ese curso
+        courseId: id,
         page,
         limit,
         sortBy,
@@ -135,7 +135,7 @@ export default function Course() {
         </div>
       </div>
 
-      <div className="table-filter">
+      <div className="table-filter mt-2">
         <div className="flex flex-row gap-5">
           <input
             type="text"

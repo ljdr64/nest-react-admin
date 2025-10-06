@@ -17,9 +17,9 @@
     "web-vitals": "1.1.2"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco build",
+    "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider craco test",
     "eject": "react-scripts eject"
   },
   "devDependencies": {
@@ -27,6 +27,7 @@
     "@types/react-dom": "17.0.20",
     "@types/react-router-dom": "5.3.3",
     "autoprefixer": "9.8.8",
+    "cross-env": "7.0.3",
     "eslint-plugin-prettier": "3.4.1",
     "eslint-plugin-simple-import-sort": "7.0.0",
     "postcss": "7.0.39",

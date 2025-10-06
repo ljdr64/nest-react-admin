@@ -19,6 +19,8 @@ services:
     build:
       context: backend
       dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env.production
     depends_on:
       database:
         condition: service_healthy
@@ -39,6 +41,8 @@ services:
     build:
       context: frontend
       dockerfile: Dockerfile
+    env_file:
+      - ./frontend/.env.production
     ports:
       - "3000:80"
     depends_on:
