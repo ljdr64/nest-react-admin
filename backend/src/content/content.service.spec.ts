@@ -85,9 +85,9 @@ const MockService = {
         };
       },
     ),
-  delete: jest
-    .fn()
-    .mockImplementation((id: string, contentId: string) => contentId),
+  delete: jest.fn().mockImplementation((...args: string[]) => {
+    return args.length === 1 ? args[0] : args[1];
+  }),
   count: jest.fn().mockReturnValue(10),
 };
 
@@ -174,7 +174,6 @@ describe('ContentService', () => {
   describe('findAllContentsByCourseId', () => {
     it('should get the array of contents', async () => {
       const contents = await service.findAllByCourseId('testcourseid', {});
-
       expect(contents[0].id).toBe('testid1');
       expect(contents[1].name).toBe('test2');
       expect(contents[2].description).toBe('test3');
@@ -207,8 +206,9 @@ describe('ContentService', () => {
 
   describe('deleteContent', () => {
     it('should delete a content and return the id', async () => {
-      const id = await service.delete('testid', 'testcontentid');
+      const id = await service.delete('testcontentid');
       expect(id).toBe('testcontentid');
+      return id;
     });
   });
 

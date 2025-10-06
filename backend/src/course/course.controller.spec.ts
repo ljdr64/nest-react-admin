@@ -97,9 +97,9 @@ const ContentMockService = {
         };
       },
     ),
-  delete: jest
-    .fn()
-    .mockImplementation((id: string, contentId: string) => contentId),
+  delete: jest.fn().mockImplementation((...args: string[]) => {
+    return args.length === 1 ? args[0] : args[1];
+  }),
 };
 
 describe('CourseController', () => {
@@ -259,8 +259,9 @@ describe('CourseController', () => {
 
   describe('deleteContent', () => {
     it('should delete a content and return the id', async () => {
-      const id = await controller.deleteContent('testid', 'testcontentid');
+      const id = await controller.deleteContent('testcontentid');
       expect(id).toBe('testcontentid');
+      return id;
     });
   });
 });
